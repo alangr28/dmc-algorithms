@@ -1,0 +1,31 @@
+-----------
+UBUNTU
+-----------
+
+Change directory
+cd ~/Dropbox/unam/2017-1/MineriaBD/AMD20171/Otros/scripts/pca_iris/
+
+Compile (linux)
+cc -fPIC -o p2_pca_udf.o p2_pca_udf.c -c -I /opt/PostgreSQL/9.4/include/postgresql/server
+
+Link
+sudo cc -shared -o /opt/PostgreSQL/9.4/lib/libPcaUdf.so p2_pca_udf.o -llapacke -llapack -lblas -lgfortran
+
+Open Postgres connection (database iris previously created)
+/opt/PostgreSQL/9.4/bin/psql -h localhost -p 5432 -U postgres iris
+
+Create schema iris
+CREATE SCHEMA "iris";
+
+Remove udf if necessary
+DROP FUNCTION "iris"."pcaFunction"(TEXT, TEXT);
+
+Create udf
+CREATE OR REPLACE FUNCTION "iris"."pcaFunction"(TEXT, TEXT) RETURNS TEXT AS '/opt/PostgreSQL/9.4/lib/libPcaUdf', 'pca' LANGUAGE C STRICT;
+
+Use it
+SELECT "iris"."pcaFunction"('iris_plants', 'sepal_length,sepal_width,petal_length,petal_width');
+is there any difference when we use normalized data (nsl,nsw,npl,npw) instead original?
+SELECT "iris"."pcaFunction"('iris_plants', 'nsl,nsw,npl,npw');
+
+\q
